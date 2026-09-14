@@ -173,6 +173,79 @@ async def routing():
 @api.get("/cell/diagnostics")
 async def diagnostics(): return await find_all("diagnostics")
 
+@api.get("/cell/observations")
+async def get_observations(type: Optional[str] = None, job_id: Optional[str] = None):
+    q = {}
+    if type: q["type"] = type
+    if job_id: q["job_id"] = job_id
+    return await db.observations.find(q, PROJECT).to_list(1000)
+
+@api.get("/cell/observations/{obs_id}")
+async def get_observation(obs_id: str):
+    doc = await db.observations.find_one({"id": obs_id}, PROJECT)
+    if not doc: raise HTTPException(404, "Observation not found")
+    return doc
+
+class ObservationCreate(BaseModel):
+    type: str
+    source: str
+    actor: str = "CELL"
+    location: Optional[str] = None
+    job_id: Optional[str] = None
+    mission_id: Optional[str] = None
+    truth: str = "LIVE"
+    content_ref: Optional[str] = None
+
+@api.post("/cell/observations")
+async def create_observation(body: ObservationCreate):
+    oid = f"obs-{uuid.uuid4().hex[:6]}"
+    doc = {"id": oid, "ts": hhmmss(), **body.model_dump()}
+    await db.observations.insert_one(dict(doc))
+    await record_event("OBSERVATION_CREATED", f"{body.type} from {body.source} by {body.actor}")
+    return doc
+
+@api.get("/cell/artifacts")
+async def get_artifacts(job_id: Optional[str] = None):
+    q = {}
+    if job_id: q["job_id"] = job_id
+    return await db.artifacts.find(q, PROJECT).to_list(1000)
+
+@api.get("/cell/artifacts/{art_id}")
+async def get_artifact(art_id: str):
+    doc = await db.artifacts.find_one({"id": art_id}, PROJECT)
+    if not doc: raise HTTPException(404, "Artifact not found")
+    return doc
+
+class ArtifactCreate(BaseModel):
+    kls: str  # class (renamed to avoid python keyword)
+    producer: str
+    job_id: Optional[str] = None
+    mission_id: Optional[str] = None
+    content_ref: Optional[str] = None
+
+@api.post("/cell/artifacts")
+async def create_artifact(body: ArtifactCreate):
+    aid = f"art-{uuid.uuid4().hex[:6]}"
+    doc = {
+        "id": aid, "class": body.kls, "producer": body.producer,
+        "job_id": body.job_id, "mission_id": body.mission_id,
+        "created": hhmmss(), "verified": False, "truth": "UNVERIFIED",
+        "content_ref": body.content_ref or "",
+    }
+    await db.artifacts.insert_one(dict(doc))
+    await record_event("ARTIFACT_CREATED", f"{body.kls} by {body.producer} (unverified)")
+    return doc
+
+@api.post("/cell/artifacts/{art_id}/verify")
+async def verify_artifact(art_id: str):
+    doc = await db.artifacts.find_one({"id": art_id}, PROJECT)
+    if not doc: raise HTTPException(404, "Artifact not found")
+    if doc.get("truth") == "DOWN":
+        raise HTTPException(409, "Cannot verify an artifact whose source is DOWN")
+    await db.artifacts.update_one({"id": art_id}, {"$set": {"verified": True, "truth": "VERIFIED"}})
+    await record_event("ARTIFACT_VERIFIED", f"{doc['class']} {art_id} verified")
+    return await db.artifacts.find_one({"id": art_id}, PROJECT)
+
 @api.get("/cell/policies")
 async def policies(): return await find_all("policies")
 

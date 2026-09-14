@@ -69,3 +69,16 @@ Build CELL, the central operational brain and command interface of a local-first
 
 ## Testing status
 - iteration_4: backend 39/39 pytest (serial) pass; frontend 100% of tested flows pass; zero critical bugs.
+
+## Implemented (2026-02-12, iteration 5 — Phase 8 Observe)
+- **Observations & Artifacts first-class**: 7 new endpoints, 10 seed rows, every mutation emits an event, DOWN sources refuse verification (409).
+- **Operations 5th tab "Observe"** with sub-tabs Browser (offline stub — honest, §8) · Media · Code · Artifacts, plus a full Observation Log at the bottom.
+- **Home "Latest artifacts"** row linked to Operations.
+- **Right Inspector `facet-artifacts`** on Job/Mission/System selection.
+- **History** rows for OBSERVATION/ARTIFACT/JOB/APPROVAL events are clickable → drilling into cross-surface context.
+- **Reusable `ArtifactStage`** adapts to class (image/video/markdown/code/html/json/text/screenshot) and refuses to render when source is DOWN.
+- **Hygiene (§78)**: command palette canonical testid; catch-all Route removes /agents /settings warnings.
+- Zero regressions. iteration_5: backend 50/50 pass, frontend 100% pass.
+
+## Testing status
+- iteration_5: backend 50/50 pytest (serial) pass; frontend 100% of tested Phase 8 flows + regressions pass; zero critical bugs.

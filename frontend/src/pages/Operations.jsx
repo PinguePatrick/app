@@ -4,17 +4,28 @@ import React, { useMemo, useState } from "react";
 import { useCell } from "@/state/CellContext";
 import Panel from "@/components/Panel";
 import DataStatePill from "@/components/DataStatePill";
+import ServiceTruthPill from "@/components/ServiceTruthPill";
 import GovernanceBadge from "@/components/GovernanceBadge";
 import BuildLifecycleBar, { JOB_FAILURE } from "@/components/BuildLifecycleBar";
+import ArtifactStage from "@/components/ArtifactStage";
+import BrowserObservation from "@/components/BrowserObservation";
 import { cellApi } from "@/services/cellApi";
 import { toast } from "sonner";
-import { ChevronRight, Play, XCircle, CheckCircle2, CircleAlert } from "lucide-react";
+import { ChevronRight, Play, XCircle, CheckCircle2, CircleAlert, Eye, Film, FileCode, Package } from "lucide-react";
 
 const TABS = [
   { id: "jobs",       label: "Jobs" },
   { id: "builds",     label: "Governed Builds" },
   { id: "loop",       label: "Mission Loop" },
   { id: "verify",     label: "Verification" },
+  { id: "observe",    label: "Observe" },
+];
+
+const OBSERVE_SUBTABS = [
+  { id: "browser",   label: "Browser",   icon: Eye },
+  { id: "media",     label: "Media",     icon: Film },
+  { id: "code",      label: "Code",      icon: FileCode },
+  { id: "artifacts", label: "Artifacts", icon: Package },
 ];
 
 function StateChip({ state }) {
@@ -31,8 +42,10 @@ function StateChip({ state }) {
 }
 
 export default function Operations() {
-  const { missions, tasks, jobs, proposals, verifications, selection, select, refresh } = useCell();
+  const { missions, tasks, jobs, proposals, verifications, observations, artifacts, selection, select, refresh } = useCell();
   const [tab, setTab] = useState("jobs");
+  const [subTab, setSubTab] = useState("browser");
+  const [openArtifact, setOpenArtifact] = useState(null);
   const activeMission = missions.find((m) => selection?.kind === "mission" && m.id === selection.id) || missions[0];
   const missionTasks  = tasks.filter((t) => t.mission_id === activeMission?.id || t.missionId === activeMission?.id);
 
@@ -258,6 +271,73 @@ export default function Operations() {
             </ul>
           )}
         </Panel>
+      )}
+
+      {tab === "observe" && (
+        <>
+          <div className="border border-[#27272A] bg-[#0B0D10] flex">
+            {OBSERVE_SUBTABS.map((t) => (
+              <button key={t.id} data-testid={`observe-sub-${t.id}`} onClick={() => setSubTab(t.id)}
+                className={`px-4 h-8 flex items-center gap-2 font-display text-[10px] uppercase tracking-[0.2em] border-r border-[#27272A] ${
+                  subTab === t.id ? "text-[#00E5FF] border-b-2 border-b-[#00E5FF] bg-[#0F1115]" : "text-[#94A3B8] hover:text-[#F8FAFC]"
+                }`}>
+                <t.icon size={11} /> {t.label}
+              </button>
+            ))}
+            <div className="ml-auto flex items-center px-3 font-data text-[10px] uppercase tracking-widest text-[#52525B]">
+              {observations.length} observations · {artifacts.length} artifacts
+            </div>
+          </div>
+
+          {subTab === "browser" && <BrowserObservation />}
+
+          {subTab === "media" && (
+            <Panel title="Media observations" right={<span>image · video · screenshot</span>}>
+              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {artifacts.filter((a) => ["IMAGE","VIDEO","SCREENSHOT"].includes((a.class || "").toUpperCase())).map((a) => (
+                  <div key={a.id} data-testid={`media-card-${a.id}`} onClick={() => setOpenArtifact(a)}
+                       className="border border-[#27272A] hover:border-[#00E5FF] bg-[#0B0D10] cursor-pointer">
+                    <ArtifactStage artifact={a} />
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
+
+          {subTab === "code" && (
+            <Panel title="Code observations" right={<span>markdown · code · json</span>}>
+              <div className="p-4 space-y-3">
+                {artifacts.filter((a) => ["MARKDOWN","CODE","JSON","TEXT","HTML"].includes((a.class || "").toUpperCase())).map((a) => (
+                  <ArtifactStage key={a.id} artifact={a} />
+                ))}
+              </div>
+            </Panel>
+          )}
+
+          {subTab === "artifacts" && (
+            <Panel title="Artifact stage" right={<span>all classes · every artifact has provenance</span>}>
+              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {artifacts.map((a) => (
+                  <ArtifactStage key={a.id} artifact={a} />
+                ))}
+              </div>
+            </Panel>
+          )}
+
+          <Panel title="Observation log" right={<span>{observations.length} entries</span>}>
+            <ul className="divide-y divide-[#27272A]">
+              {observations.map((o) => (
+                <li key={o.id} data-testid={`obs-row-${o.id}`} className="px-4 py-2 grid grid-cols-[70px_90px_120px_1fr_100px] items-center gap-3 font-data text-[11px]">
+                  <span className="text-[#52525B]">{o.ts}</span>
+                  <span className="text-[#00E5FF] uppercase tracking-widest">{o.type}</span>
+                  <span className="text-[#94A3B8] truncate">{o.actor}</span>
+                  <span className="text-[#F8FAFC] truncate">{o.content_ref}</span>
+                  <span className="justify-self-end"><ServiceTruthPill state={o.truth} /></span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </>
       )}
     </div>
   );

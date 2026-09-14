@@ -29,7 +29,7 @@ export default function CommandPalette() {
   return (
     <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen}>
       <CommandInput data-testid="command-palette-input" placeholder="Command…  navigate · systems · agents · missions" />
-      <CommandList className="max-h-[420px]">
+      <CommandList data-testid="command-palette" className="max-h-[420px]">
         <CommandEmpty>No matches. CELL will not fabricate results.</CommandEmpty>
 
         <CommandGroup heading="Navigate">

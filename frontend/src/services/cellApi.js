@@ -37,6 +37,8 @@ export const cellApi = {
   getRouting:    () => safe(() => http.get("/routing"),       null),
   getDiagnostics:() => safe(() => http.get("/diagnostics"),   []),
   getDiff:       (id) => safe(() => http.get(`/diffs/${id}`), null),
+  getObservations: (params) => safe(() => http.get("/observations", { params }), []),
+  getArtifacts:    (params) => safe(() => http.get("/artifacts",    { params }), []),
 
   // mutations
   decideApproval: (id, decision) => http.post(`/approvals/${id}/decide`, { decision }).then(r => r.data),
@@ -45,4 +47,7 @@ export const cellApi = {
   advanceMission: (id)            => http.post(`/missions/${id}/advance`).then(r => r.data),
   advanceJob:     (id)            => http.post(`/jobs/${id}/advance`).then(r => r.data),
   failJob:        (id, reason)    => http.post(`/jobs/${id}/fail?reason=${encodeURIComponent(reason)}`).then(r => r.data),
+  createObservation: (body)       => http.post(`/observations`, body).then(r => r.data),
+  createArtifact:    (body)       => http.post(`/artifacts`, body).then(r => r.data),
+  verifyArtifact:    (id)         => http.post(`/artifacts/${id}/verify`).then(r => r.data),
 };

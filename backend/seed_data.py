@@ -161,6 +161,20 @@ SEED = {
         {"id": "d-3", "name": "Ollama bridge",      "status": "DOWN", "ts": "09:41:24", "note": "Not configured (no LLM wired in Phase 3)."},
         {"id": "d-4", "name": "Browser CDP",        "status": "DOWN", "ts": "09:41:24", "note": "No Chrome DevTools Protocol endpoint bound."},
     ],
+    "observations": [
+        {"id": "obs-1", "type": "LOG",        "source": "backend/server.py",        "actor": "CELL",       "ts": "09:41:24", "location": "/api/cell/state",             "job_id": None,       "mission_id": "mission-active", "truth": "LIVE",       "content_ref": "GET /api/cell/state → 200 OK"},
+        {"id": "obs-2", "type": "CODE",       "source": "job-001",                  "actor": "FORGE-02",   "ts": "09:32:11", "location": "knowledge/vector/index.golden.bin", "job_id": "job-001", "mission_id": "m-001",          "truth": "VERIFIED",   "content_ref": "vector.rebuild(v.2026-02-12) → size=187MB · golden-diff=0"},
+        {"id": "obs-3", "type": "SCREEN",     "source": "browser/cdp",              "actor": "WATCHTOWER", "ts": "—",         "location": "not connected",               "job_id": None,       "mission_id": None,             "truth": "DOWN",       "content_ref": "no screenshot available — Browser CDP not connected"},
+        {"id": "obs-4", "type": "MEDIA",      "source": "job-003",                  "actor": "GHOST-Δ",    "ts": "07:44:33", "location": "sandbox://forge/mirror-walk", "job_id": "job-003", "mission_id": "m-003",          "truth": "SIMULATED",  "content_ref": "https://placehold.co/640x360/0f1115/00E5FF/png?text=MIRROR-WALK+trace+%28sim%29"},
+        {"id": "obs-5", "type": "EVENT",      "source": "governance",                "actor": "JR",         "ts": "08:47:33", "location": "/api/cell/approvals/ap-3",    "job_id": None,       "mission_id": "m-001",          "truth": "VERIFIED",   "content_ref": "JR approved: Publish rebuilt vector index"},
+    ],
+    "artifacts": [
+        {"id": "art-1", "class": "MARKDOWN",   "producer": "FORGE-02",   "job_id": "job-001", "mission_id": "m-001", "created": "09:34:02", "verified": True,  "truth": "VERIFIED",   "content_ref": "# Vector index rebuild\n\n- Source: golden set v.2026-02-12\n- Size: **187MB**\n- Golden diff: **0**\n- Query latency p50: **22ms**\n\n→ Ready to publish (see approval ap-3)."},
+        {"id": "art-2", "class": "CODE",       "producer": "SIGNAL-11",  "job_id": "job-002", "mission_id": "m-002", "created": "09:03:18", "verified": False, "truth": "PROPOSED",   "content_ref": "# proposed relay/routes.tsv\ndefault 10.0.0.2\nbackup  10.0.0.1\nhc      /health"},
+        {"id": "art-3", "class": "SCREENSHOT", "producer": "WATCHTOWER", "job_id": None,       "mission_id": "mission-active", "created": "—",     "verified": False, "truth": "DOWN",       "content_ref": ""},
+        {"id": "art-4", "class": "IMAGE",      "producer": "GHOST-Δ",    "job_id": "job-003", "mission_id": "m-003", "created": "07:44:41", "verified": False, "truth": "SIMULATED",  "content_ref": "https://placehold.co/720x420/0f1115/14B8A6/png?text=MIRROR-WALK+failover+%28sim%29"},
+        {"id": "art-5", "class": "JSON",       "producer": "CELL",       "job_id": None,       "mission_id": "mission-active", "created": "09:41:24", "verified": True,  "truth": "VERIFIED",   "content_ref": "{\n  \"mission\": \"MAKE-JRCOCKPIT-THE-ONE\",\n  \"phase\": \"CONSOLIDATION\",\n  \"mode\": \"CONNECTED\",\n  \"truth\": \"MASTER_LAB_MAP.md\"\n}"},
+    ],
     "risks": [
         {"id": "r-1", "label": "Schema drift on ORACLE-SRC", "level": "HIGH",   "linked": ["m-004", "sys-oracle"]},
         {"id": "r-2", "label": "RELAY-EDGE stale routes",    "level": "MEDIUM", "linked": ["m-002", "sys-relay"]},

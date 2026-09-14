@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "@/App.css";
 import { CellProvider } from "@/state/CellContext";
 import Shell from "@/layout/Shell";
@@ -30,6 +30,7 @@ export default function App() {
               <Route path="/runtime" element={<Runtime />} />
               <Route path="/governance" element={<Governance />} />
               <Route path="/history" element={<History />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Shell>
           <Toaster />

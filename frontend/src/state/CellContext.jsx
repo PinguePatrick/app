@@ -11,7 +11,7 @@ export function CellProvider({ children }) {
     sources: [], approvals: [], risks: [], events: [], history: [],
     map: { nodes: [], edges: [] }, memory: [], runtime: [], policies: [],
     jobs: [], proposals: [], verifications: [], services: [], routes: [],
-    routing: null, diagnostics: [],
+    routing: null, diagnostics: [], observations: [], artifacts: [],
   });
   const [selection, setSelection] = useState(null); // { kind, id }
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -24,7 +24,7 @@ export function CellProvider({ children }) {
 
   async function refresh() {
     const [cell, mission, autonomy, jr, operator, systems, agents, teams, missions, tasks, sources, approvals, risks, events, history, map, memory, runtime, policies,
-           jobs, proposals, verifications, services, routes, routing, diagnostics] =
+           jobs, proposals, verifications, services, routes, routing, diagnostics, observations, artifacts] =
       await Promise.all([
         cellApi.getCellState(), cellApi.getMission(), cellApi.getAutonomy(), cellApi.getJrState(),
         cellApi.getOperator(), cellApi.getSystems(), cellApi.getAgents(),
@@ -33,11 +33,13 @@ export function CellProvider({ children }) {
         cellApi.getMap(), cellApi.getMemory(), cellApi.getRuntime(), cellApi.getPolicies(),
         cellApi.getJobs(), cellApi.getProposals(), cellApi.getVerifications(), cellApi.getServices(),
         cellApi.getRoutes(), cellApi.getRouting(), cellApi.getDiagnostics(),
+        cellApi.getObservations(), cellApi.getArtifacts(),
       ]);
     setState({
       loading: false, cell, mission, autonomy, jr, operator, systems, agents, teams, missions, tasks,
       sources, approvals, risks, events, history, map, memory, runtime, policies,
       jobs, proposals, verifications, services, routes, routing, diagnostics,
+      observations, artifacts,
     });
   }
 

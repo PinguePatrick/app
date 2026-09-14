@@ -10,10 +10,10 @@ import FatherAlerts from "@/components/FatherAlerts";
 import AutonomyPanel from "@/components/AutonomyPanel";
 import JrCellStatus from "@/components/JrCellStatus";
 import NextFocus from "@/components/NextFocus";
-import { AlertOctagon, ArrowUpRight, Radio } from "lucide-react";
+import { AlertOctagon, ArrowUpRight, Radio, Package } from "lucide-react";
 
 export default function CommandCenter() {
-  const { mission, systems, missions, approvals, risks, events, agents, select } = useCell();
+  const { mission, systems, missions, approvals, risks, events, agents, artifacts, select } = useCell();
   const navigate = useNavigate();
 
   const truthCounts = systems.reduce((acc, s) => { acc[s.truth] = (acc[s.truth] || 0) + 1; return acc; }, {});
@@ -148,6 +148,33 @@ export default function CommandCenter() {
           </ul>
         </Panel>
       </div>
+
+      {/* Row 5.5 — Latest artifacts (§10 provenance-first) */}
+      {artifacts.length > 0 && (
+        <Panel testId="panel-latest-artifacts" title="Latest artifacts"
+               right={<span className="flex items-center gap-1.5"><Package size={11} className="text-[#00E5FF]" /> {artifacts.length} total · click to inspect in Operations → Observe</span>}>
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#27272A]">
+            {artifacts.slice(0, 3).map((a) => (
+              <div key={a.id} data-testid={`home-artifact-${a.id}`}
+                   onClick={() => navigate("/operations")}
+                   className="p-4 hover:bg-[#16191E] cursor-pointer">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package size={12} className="text-[#00E5FF]" />
+                  <span className="font-display text-[12px] text-[#F8FAFC]">{a.id}</span>
+                  <span className="font-data text-[10px] uppercase tracking-widest text-[#52525B]">{a.class}</span>
+                  <span className="ml-auto"><DataStatePill state={a.truth === "PROPOSED" ? "SIMULATED" : a.truth === "DOWN" ? "UNKNOWN" : a.truth === "VERIFIED" ? "KNOWN" : a.truth === "SIMULATED" ? "SIMULATED" : "UNKNOWN"} /></span>
+                </div>
+                <div className="font-data text-[10px] uppercase tracking-widest text-[#94A3B8]">
+                  by {a.producer} · job {a.job_id || "—"}
+                </div>
+                <div className="mt-1 font-data text-[10px] uppercase tracking-widest text-[#52525B]">
+                  {a.verified ? "VERIFIED" : "UNVERIFIED"} · {a.created || "—"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      )}
 
       {/* Row 6 — Pending approvals table (Governance shortcut) */}
       <Panel testId="panel-approvals" title="Approval queue" right={<span>{approvals.length} items · one click to Governance</span>}>

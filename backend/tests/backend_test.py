@@ -199,3 +199,94 @@ class TestMutationsRegression:
     def test_advance_mission(self, client):
         r = client.post(f"{API}/cell/missions/m-003/advance")
         assert r.status_code == 200
+
+
+
+# ---- Phase 8: Observations & Artifacts ----
+class TestPhase8Observations:
+    def test_observations_seeded(self, client):
+        obs = client.get(f"{API}/cell/observations").json()
+        assert len(obs) == 5
+        types = {o["type"] for o in obs}
+        assert {"LOG", "CODE", "SCREEN", "MEDIA", "EVENT"} <= types
+        for o in obs:
+            assert "_id" not in o
+
+    def test_observations_filter_by_type(self, client):
+        obs = client.get(f"{API}/cell/observations?type=CODE").json()
+        assert len(obs) >= 1
+        assert all(o["type"] == "CODE" for o in obs)
+
+    def test_get_observation_by_id(self, client):
+        r = client.get(f"{API}/cell/observations/obs-1")
+        assert r.status_code == 200
+        assert r.json()["id"] == "obs-1"
+
+    def test_get_observation_404(self, client):
+        r = client.get(f"{API}/cell/observations/nope")
+        assert r.status_code == 404
+
+    def test_create_observation(self, client):
+        client.post(f"{API}/cell/reseed")
+        body = {"type": "LOG", "source": "TEST", "actor": "pytest", "truth": "LIVE"}
+        r = client.post(f"{API}/cell/observations", json=body)
+        assert r.status_code == 200
+        d = r.json()
+        assert d["id"].startswith("obs-")
+        assert d["type"] == "LOG"
+        assert d["actor"] == "pytest"
+        # Verify OBSERVATION_CREATED event was recorded
+        events = client.get(f"{API}/cell/events").json()
+        assert any(e["kind"] == "OBSERVATION_CREATED" and "pytest" in e.get("text", "") for e in events)
+
+
+class TestPhase8Artifacts:
+    def test_artifacts_seeded(self, client):
+        client.post(f"{API}/cell/reseed")
+        arts = client.get(f"{API}/cell/artifacts").json()
+        assert len(arts) == 5
+        classes = {a["class"] for a in arts}
+        assert {"MARKDOWN", "CODE", "SCREENSHOT", "IMAGE", "JSON"} <= classes
+        for a in arts:
+            assert "_id" not in a
+
+    def test_artifacts_filter_by_job(self, client):
+        arts = client.get(f"{API}/cell/artifacts?job_id=job-001").json()
+        assert len(arts) >= 1
+        assert all(a["job_id"] == "job-001" for a in arts)
+        assert any(a["id"] == "art-1" for a in arts)
+
+    def test_create_artifact_unverified(self, client):
+        body = {"kls": "CODE", "producer": "TEST"}
+        r = client.post(f"{API}/cell/artifacts", json=body)
+        assert r.status_code == 200
+        d = r.json()
+        assert d["verified"] is False
+        assert d["truth"] == "UNVERIFIED"
+        events = client.get(f"{API}/cell/events").json()
+        assert any(e["kind"] == "ARTIFACT_CREATED" for e in events)
+
+    def test_verify_artifact_flips_state(self, client):
+        client.post(f"{API}/cell/reseed")
+        r = client.post(f"{API}/cell/artifacts/art-2/verify")
+        assert r.status_code == 200
+        d = r.json()
+        assert d["verified"] is True
+        assert d["truth"] == "VERIFIED"
+        events = client.get(f"{API}/cell/events").json()
+        assert any(e["kind"] == "ARTIFACT_VERIFIED" for e in events)
+
+    def test_verify_down_artifact_409(self, client):
+        r = client.post(f"{API}/cell/artifacts/art-3/verify")
+        assert r.status_code == 409
+        assert "DOWN" in r.text
+
+    def test_reseed_restores_observations_and_artifacts(self, client):
+        r = client.post(f"{API}/cell/reseed")
+        assert r.status_code == 200
+        obs = client.get(f"{API}/cell/observations").json()
+        arts = client.get(f"{API}/cell/artifacts").json()
+        assert len(obs) == 5
+        assert len(arts) == 5
+        art2 = next(a for a in arts if a["id"] == "art-2")
+        assert art2["verified"] is False

@@ -9,7 +9,7 @@ import { X, MapPin, GitBranch, Radio, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function RightInspector() {
-  const { selection, clearSelection, systems, agents, missions, approvals, sources, services, jobs, select } = useCell();
+  const { selection, clearSelection, systems, agents, missions, approvals, sources, services, jobs, artifacts, select } = useCell();
   const navigate = useNavigate();
 
   const details = useMemo(() => {
@@ -20,8 +20,20 @@ export default function RightInspector() {
     if (kind === "mission")  return { kind, entity: missions.find((m) => m.id === id) };
     if (kind === "approval") return { kind, entity: approvals.find((a) => a.id === id) };
     if (kind === "source")   return { kind, entity: sources.find((s) => s.id === id) };
+    if (kind === "job")      return { kind, entity: jobs.find((j) => j.id === id) };
     return null;
-  }, [selection, systems, agents, missions, approvals, sources]);
+  }, [selection, systems, agents, missions, approvals, sources, jobs]);
+
+  // Related artifacts (§53) — for a selected Job, Mission, or System
+  const relatedArtifacts = useMemo(() => {
+    if (!details) return [];
+    const { kind, entity } = details;
+    if (!entity) return [];
+    if (kind === "job")     return artifacts.filter((a) => a.job_id === entity.id);
+    if (kind === "mission") return artifacts.filter((a) => a.mission_id === entity.id);
+    if (kind === "system")  return artifacts.filter((a) => a.job_id && jobs.some((j) => j.id === a.job_id));
+    return [];
+  }, [details, artifacts, jobs]);
 
   // Phase 6 facets for a system node
   const facets = useMemo(() => {
@@ -177,6 +189,26 @@ export default function RightInspector() {
               Any action on this entity must pass governance policies. Approvals require operator <span className="text-[#00E5FF]">JR</span>.
             </div>
           </div>
+
+          {relatedArtifacts.length > 0 && (
+            <div className="border-t border-[#27272A] pt-3" data-testid="facet-artifacts">
+              <div className="font-data text-[10px] uppercase tracking-widest text-[#52525B] mb-2">
+                Related artifacts · {relatedArtifacts.length}
+              </div>
+              <ul className="space-y-1">
+                {relatedArtifacts.slice(0, 6).map((a) => (
+                  <li key={a.id} onClick={() => navigate("/operations")}
+                      className="cursor-pointer font-data text-[11px] text-[#F8FAFC] hover:text-[#00E5FF] flex items-center gap-2">
+                    <span>{a.id}</span>
+                    <span className="text-[#52525B] uppercase tracking-widest text-[10px]">{a.class}</span>
+                    <span className="ml-auto text-[10px] uppercase tracking-widest" style={{ color: a.verified ? "#10B981" : "#94A3B8" }}>
+                      {a.verified ? "VERIFIED" : "UNVERIFIED"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </aside>
