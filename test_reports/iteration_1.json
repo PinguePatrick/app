@@ -1,0 +1,29 @@
+{
+  "summary": "First-finish smoke test for CELL Command Center (UI-only demo). Home renders with THE MAP IS THE TRUTH hero, DEMO banner, and Command Center container. All 9 left-nav routes navigate and their page containers are visible. Master Map renders SVG canvas, node click updates the Context Inspector, filter buttons are clickable. Operations mission click works. Governance Approve/Block shows toast messages (3 approval rows detected). Elite Teams shows 6 team panels and agent click works. Command palette opens via Cmd+K and global search trigger. Conversation panel accepts input, returns keyword-matched reply for 'map', and minimize hides it. No page errors; only a benign Radix a11y warning about missing DialogTitle inside CommandPalette DialogContent.",
+  "tested_scope": ["frontend", "integration"],
+  "passed": [
+    "Home '/' renders hero, DEMO banner, command-center container",
+    "All 9 left-nav items navigate and target page containers visible (command-center, master-map, elite-teams, operations, knowledge, memory, runtime, governance, history)",
+    "Master Map canvas renders; node click populates right-inspector; filter buttons clickable",
+    "Operations mission row click works",
+    "Governance Approve on PENDING triggers toast: 'APPROVE recorded ... (Demo — no real execution)'",
+    "Elite Teams shows 6 team panels; agent-row click works",
+    "Command palette opens on Cmd+K and via global-search-trigger; palette-nav items present",
+    "Conversation panel: input+send returns scripted reply for 'map'; minimize hides panel",
+    "No JS pageerrors; no console errors beyond Radix a11y warning"
+  ],
+  "failed": [
+    {
+      "area": "Accessibility (CommandPalette)",
+      "issue": "Radix DialogContent missing DialogTitle (a11y warning in console)",
+      "evidence": "Console: '`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.'",
+      "priority": "LOW"
+    }
+  ],
+  "action_items": [
+    "Optional: add a VisuallyHidden DialogTitle inside CommandPalette to silence Radix a11y warning"
+  ],
+  "success_rate": {"backend": "not tested (skipped per request)", "frontend": "100% of tested flows"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

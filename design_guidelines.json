@@ -1,0 +1,95 @@
+{
+  "theme": "dark",
+  "typography": {
+    "headings": {
+      "family": "IBM Plex Mono, monospace",
+      "weights": ["400", "600"],
+      "tracking": "tracking-tight",
+      "classes": "font-mono tracking-tight"
+    },
+    "body": {
+      "family": "Chivo, sans-serif",
+      "weights": ["400", "500"],
+      "classes": "font-sans"
+    },
+    "data_and_code": {
+      "family": "JetBrains Mono, monospace",
+      "weights": ["400", "700"],
+      "classes": "font-mono"
+    }
+  },
+  "colors": {
+    "background": {
+      "base": "#050505",
+      "surface": "#0F1115",
+      "panel": "#16191E",
+      "border": "#27272A"
+    },
+    "accent": {
+      "primary": "#00E5FF",
+      "primary_hover": "#00B8CC",
+      "primary_muted": "rgba(0, 229, 255, 0.15)"
+    },
+    "text": {
+      "primary": "#F8FAFC",
+      "secondary": "#94A3B8",
+      "muted": "#52525B",
+      "inverse": "#050505"
+    },
+    "semantic": {
+      "data_states": {
+        "KNOWN": "#F8FAFC",
+        "UNKNOWN": "#71717A",
+        "STALE": "#D97706",
+        "CONFLICTING": "#E11D48",
+        "SIMULATED": "#14B8A6"
+      },
+      "governance_states": {
+        "pending": "#D97706",
+        "approved": "#00E5FF",
+        "blocked": "#DC2626",
+        "executed": "#10B981"
+      }
+    }
+  },
+  "visual_enhancers": {
+    "borders": "1px solid #27272A. Use border-collapse patterns to expose the skeleton of the layout. Every section should be cleanly divided by a 1px border.",
+    "radii": "Sharp corners. Use `rounded-none` or max `rounded-sm` (2px) to maintain the technical terminal aesthetic.",
+    "shadows": "Minimal. Avoid soft diffuse shadows. Use hard 1px offsets or inner shadows for depth when necessary.",
+    "textures": "CSS repeating-linear-gradient for subtle scanlines in empty states or map backgrounds.",
+    "surfaces": "Flat, solid colors for panels to prevent data distortion. Only use glassmorphism (backdrop-blur) for floating elements like Cmd+K palette or context menus. NEVER use transparent backgrounds for readable content."
+  },
+  "layout": {
+    "density": "High density. Use tight padding (`p-2`, `p-4`) for data tables and inspector panels.",
+    "structure": "Grid-based with 1px borders dividing regions. Desktop-first: Left nav (w-64), center workspace (flex-1), right inspector (w-80), top status bar (h-12).",
+    "alignment": "Left-align dense data. Right-align numbers/metrics."
+  },
+  "components": {
+    "map_nodes": "Use distinct visual encoding. KNOWN: Solid white border. UNKNOWN: Dashed gray border. STALE: Dotted amber border. CONFLICTING: Thick red border. SIMULATED: Dashed teal border with pulsing animation.",
+    "status_badges": "Rectangular, mono font, uppercase, text-xs. 1px border matching the state color, background 10% opacity of state color.",
+    "inspector_panels": "Fixed width right sidebar, 1px left border. Dense key-value pairs using JetBrains Mono for values.",
+    "command_palette": "Centered floating modal. Glassmorphism background (`bg-black/80 backdrop-blur-md`) with 1px Arc Cyan border.",
+    "conversation_panel": "Dockable window. Incoming AI messages in primary text, JR commands in Arc Cyan.",
+    "global_search": "Prominent search bar in header or command palette (Cmd+K)."
+  },
+  "motion": {
+    "general": "Minimal, functional motion. No bouncy animations.",
+    "transitions": "Instant or very fast (100ms ease-out) for data states.",
+    "loading": "Use ASCII spinners or indeterminate progress bars with terminal styling."
+  },
+  "libraries": {
+    "icons": "lucide-react (styled technically) or Phosphor Icons (Regular). Avoid emojis.",
+    "map_visualization": "reactflow or react-force-graph for the Master L@B Map",
+    "charts": "Recharts (styled with hard lines, no smooth curves, stepped lines for data)"
+  },
+  "instructions_to_main_agent": [
+    "Build a desktop-first operational dashboard. Mobile responsiveness is secondary, but ensure grids stack if viewport shrinks.",
+    "Use standard HTML+Tailwind for main layouts to create the 'technical/terminal' grid feel. Use Shadcn components for complex interactions but override their rounded corners to `rounded-none`.",
+    "Avoid standard generic SaaS looks. Every panel should feel like an integrated system screen.",
+    "In the Master L@B Map, emphasize 'THE MAP IS THE TRUTH' by making data nodes interactive and explicitly colored by their semantic state.",
+    "All interactive and key informational elements MUST include a `data-testid` attribute.",
+    "Ensure hover states have higher contrast. Never use pure transparent backgrounds for panels."
+  ],
+  "image_urls": [],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": "Prioritize technical accuracy and density over white space. The UI must look like an advanced ops terminal. Use 'JetBrains Mono' or 'IBM Plex Mono' for metrics. Do not use generic emoji icons. All interactions should feel crisp and immediate. Do not apply universal transition (`transition: all`). Create depth through layered borders and structured layout. Ensure data states (KNOWN, UNKNOWN, STALE, CONFLICTING, SIMULATED) strictly adhere to semantic colors provided."
+}
