@@ -28,14 +28,36 @@ Build CELL, the central operational brain and command interface of a local-first
 - Governance actions (Approve/Block) surface toast confirmations; BLOCKED items refuse override
 - Scripted CELL console with keyword-matched replies
 
-## Prioritized backlog
-- **P1 — Real backend abstraction**: wire `cellApi` to FastAPI endpoints returning the same shape
-- **P1 — Map editing**: add a node / mark as UNKNOWN / promote a SIMULATED node into KNOWN with an audit event
-- **P2 — Live LLM in CELL console**: swap scripted replies for Claude Sonnet 5 via Emergent LLM key
-- **P2 — Timeline/scrubber for History**: filter by kind, time range
-- **P2 — Keyboard-driven navigation**: `g c` / `g m` shortcuts, focus rings on all rows
-- **P3 — Multi-operator support**: additional user roles beyond JR
-- **P3 — Real telemetry adapter**: Prometheus/OTel bridge (behind explicit toggle so we never fabricate)
+## Implemented (2026-02-12, iteration 2 — real backend)
+- FastAPI + MongoDB backend at `/api/cell/*` with idempotent startup seeding (`seed_data.py`)
+- 16 read endpoints mirror the frontend view model (state, operator, systems, agents, teams, missions, tasks, sources, approvals, risks, events, history, map, memory, runtime, policies)
+- Mutation endpoints — every one auto-records an event and updates `last_map_sync`:
+  - `POST /api/cell/approvals/{id}/decide` (APPROVE / BLOCK, refuses to override BLOCKED with 409)
+  - `POST /api/cell/map/nodes` (adds node, mirrors into /systems)
+  - `POST /api/cell/map/nodes/{id}/truth?truth=…` (KNOWN | UNKNOWN | STALE | CONFLICTING | SIMULATED)
+  - `POST /api/cell/missions/{id}/advance` (loop phase advance)
+  - `POST /api/cell/reseed` (dev reset)
+- Frontend `cellApi.js` swapped from local mocks to axios calls against REACT_APP_BACKEND_URL
+- New UI actions: MasterMap "Add node", per-row "Set truth" buttons, Operations "Advance phase", Governance approve/block persist and re-fetch via `refresh()`
+
+## Implemented (2026-02-12, iteration 3 — Phase 3 Home rebuild)
+- New backend endpoints: `GET /api/cell/mission`, `/autonomy`, `/jr` (all seeded, all `_id`-projected)
+- **Global Mission Strip** below the top bar, on every route: MISSION · PHASE · MODE (`CONNECTED` | `SIMULATED`) · GOVERNANCE (`FATHER APPROVAL`) · TRUTH (`MASTER_LAB_MAP.md`) — §23
+- **Rebuilt Home** answers the 10 §87 questions on one screen:
+  1. Current mission → Mission Strip
+  2. What is Jr doing → `identity-jr` card
+  3. What is CELL doing → `identity-cell` card
+  4. Which workers are active → `metric-workers` tile
+  5. What jobs are running → Active operations
+  6. What changed recently → Recent activity
+  7. What is broken → Problems panel
+  8. What requires approval → Father Alerts (prominent) + Approval queue
+  9. L@B state → Truth breakdown
+  10. What Jr wants next → NextFocus panel with per-item RISK + FATHER badges
+- CELL and Jr identities kept explicitly separate (§36-37)
+- Autonomy scope panel with `MODE`, ALLOWED / REQUIRES FATHER split (§7 Drive concept)
+- Zero regressions: all mutations, palette, right-inspector, CELL console, DEMO banner preserved
+- **Documents produced** (§105 Required First Report): `/app/memory/ARCHITECTURE_INVENTORY.md`, `HISTORICAL_CAPABILITY_MAP.md`, `CONSOLIDATION_PLAN.md`
 
 ## Testing status
-- iteration_1 frontend suite: 100% of tested flows pass; one low-priority a11y warning (DialogTitle) fixed.
+- iteration_3: backend 23/23 pytest pass; frontend 100% of tested flows pass; zero regressions.

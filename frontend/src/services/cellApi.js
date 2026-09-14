@@ -1,25 +1,38 @@
-// Abstraction seam. Today: returns local demo data.
-// Tomorrow: swap the internals for real backend calls without changing callers.
-import * as demo from "@/data/demo";
+// Real backend seam. Calls FastAPI at REACT_APP_BACKEND_URL/api/cell/*
+import axios from "axios";
 
-const wait = (ms = 60) => new Promise((r) => setTimeout(r, ms));
+const BASE = `${process.env.REACT_APP_BACKEND_URL}/api/cell`;
+const http = axios.create({ baseURL: BASE, timeout: 15000 });
+
+async function safe(fn, fallback) {
+  try { const r = await fn(); return r.data; } catch (e) { console.warn("[cellApi]", e?.message); return fallback; }
+}
 
 export const cellApi = {
-  async getCellState()   { await wait(); return demo.cellState; },
-  async getOperator()    { await wait(); return demo.jr; },
-  async getSystems()     { await wait(); return demo.systems; },
-  async getAgents()      { await wait(); return demo.agents; },
-  async getTeams()       { await wait(); return demo.teams; },
-  async getMissions()    { await wait(); return demo.missions; },
-  async getTasks()       { await wait(); return demo.tasks; },
-  async getSources()     { await wait(); return demo.sources; },
-  async getApprovals()   { await wait(); return demo.approvals; },
-  async getRisks()       { await wait(); return demo.risks; },
-  async getEvents()      { await wait(); return demo.events; },
-  async getHistory()     { await wait(); return demo.history; },
-  async getMap()         { await wait(); return { nodes: demo.mapNodes, edges: demo.mapEdges }; },
-  async getMemory()      { await wait(); return demo.memoryEntries; },
-  async getRuntime()     { await wait(); return demo.runtimeHosts; },
-  async getPolicies()    { await wait(); return demo.policies; },
-  isDemo: true,
+  isDemo: false,
+  getCellState:  () => safe(() => http.get("/state"),     null),
+  getMission:    () => safe(() => http.get("/mission"),   null),
+  getAutonomy:   () => safe(() => http.get("/autonomy"),  null),
+  getJrState:    () => safe(() => http.get("/jr"),        null),
+  getOperator:   () => safe(() => http.get("/operator"),  null),
+  getSystems:    () => safe(() => http.get("/systems"),   []),
+  getAgents:     () => safe(() => http.get("/agents"),    []),
+  getTeams:      () => safe(() => http.get("/teams"),     []),
+  getMissions:   () => safe(() => http.get("/missions"),  []),
+  getTasks:      () => safe(() => http.get("/tasks"),     []),
+  getSources:    () => safe(() => http.get("/sources"),   []),
+  getApprovals:  () => safe(() => http.get("/approvals"), []),
+  getRisks:      () => safe(() => http.get("/risks"),     []),
+  getEvents:     () => safe(() => http.get("/events"),    []),
+  getHistory:    () => safe(() => http.get("/history"),   []),
+  getMap:        () => safe(() => http.get("/map"),       { nodes: [], edges: [] }),
+  getMemory:     () => safe(() => http.get("/memory"),    []),
+  getRuntime:    () => safe(() => http.get("/runtime"),   []),
+  getPolicies:   () => safe(() => http.get("/policies"),  []),
+
+  // mutations
+  decideApproval: (id, decision) => http.post(`/approvals/${id}/decide`, { decision }).then(r => r.data),
+  addNode:        (payload)       => http.post(`/map/nodes`, payload).then(r => r.data),
+  setNodeTruth:   (id, truth)     => http.post(`/map/nodes/${id}/truth?truth=${encodeURIComponent(truth)}`).then(r => r.data),
+  advanceMission: (id)            => http.post(`/missions/${id}/advance`).then(r => r.data),
 };

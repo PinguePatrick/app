@@ -5,6 +5,7 @@ import RightInspector from "@/layout/RightInspector";
 import ConversationPanel from "@/layout/ConversationPanel";
 import CommandPalette from "@/layout/CommandPalette";
 import DemoBanner from "@/components/DemoBanner";
+import MissionStrip from "@/components/MissionStrip";
 import { useCell } from "@/state/CellContext";
 
 export default function Shell({ children }) {
@@ -12,6 +13,7 @@ export default function Shell({ children }) {
   return (
     <div className="min-h-screen bg-[#050505] text-[#F8FAFC] flex flex-col">
       <TopBar />
+      <MissionStrip />
       <div className="flex flex-1 min-h-0">
         <LeftNav />
         <main className="flex-1 min-w-0 flex flex-col">

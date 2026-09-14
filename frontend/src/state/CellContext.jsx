@@ -6,7 +6,7 @@ const CellCtx = createContext(null);
 export function CellProvider({ children }) {
   const [state, setState] = useState({
     loading: true,
-    cell: null, operator: null,
+    cell: null, mission: null, autonomy: null, jr: null, operator: null,
     systems: [], agents: [], teams: [], missions: [], tasks: [],
     sources: [], approvals: [], risks: [], events: [], history: [],
     map: { nodes: [], edges: [] }, memory: [], runtime: [], policies: [],
@@ -16,20 +16,24 @@ export function CellProvider({ children }) {
   const [convoOpen, setConvoOpen] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      const [cell, operator, systems, agents, teams, missions, tasks, sources, approvals, risks, events, history, map, memory, runtime, policies] =
-        await Promise.all([
-          cellApi.getCellState(), cellApi.getOperator(), cellApi.getSystems(), cellApi.getAgents(),
-          cellApi.getTeams(), cellApi.getMissions(), cellApi.getTasks(), cellApi.getSources(),
-          cellApi.getApprovals(), cellApi.getRisks(), cellApi.getEvents(), cellApi.getHistory(),
-          cellApi.getMap(), cellApi.getMemory(), cellApi.getRuntime(), cellApi.getPolicies(),
-        ]);
-      setState({
-        loading: false, cell, operator, systems, agents, teams, missions, tasks,
-        sources, approvals, risks, events, history, map, memory, runtime, policies,
-      });
-    })();
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function refresh() {
+    const [cell, mission, autonomy, jr, operator, systems, agents, teams, missions, tasks, sources, approvals, risks, events, history, map, memory, runtime, policies] =
+      await Promise.all([
+        cellApi.getCellState(), cellApi.getMission(), cellApi.getAutonomy(), cellApi.getJrState(),
+        cellApi.getOperator(), cellApi.getSystems(), cellApi.getAgents(),
+        cellApi.getTeams(), cellApi.getMissions(), cellApi.getTasks(), cellApi.getSources(),
+        cellApi.getApprovals(), cellApi.getRisks(), cellApi.getEvents(), cellApi.getHistory(),
+        cellApi.getMap(), cellApi.getMemory(), cellApi.getRuntime(), cellApi.getPolicies(),
+      ]);
+    setState({
+      loading: false, cell, mission, autonomy, jr, operator, systems, agents, teams, missions, tasks,
+      sources, approvals, risks, events, history, map, memory, runtime, policies,
+    });
+  }
 
   const select = useCallback((kind, id) => setSelection({ kind, id }), []);
   const clearSelection = useCallback(() => setSelection(null), []);
@@ -48,7 +52,7 @@ export function CellProvider({ children }) {
   }, []);
 
   const value = useMemo(() => ({
-    ...state, selection, select, clearSelection,
+    ...state, selection, select, clearSelection, refresh,
     paletteOpen, setPaletteOpen, convoOpen, setConvoOpen,
   }), [state, selection, select, clearSelection, paletteOpen, convoOpen]);
 

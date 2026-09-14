@@ -2,6 +2,9 @@ import React, { useMemo, useState } from "react";
 import { useCell } from "@/state/CellContext";
 import Panel from "@/components/Panel";
 import DataStatePill from "@/components/DataStatePill";
+import { cellApi } from "@/services/cellApi";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
 
 const STATE_COLOR = {
   KNOWN: "#F8FAFC",
@@ -22,8 +25,29 @@ const nodeDash = (t) => ({
 const nodeStroke = (t) => (t === "CONFLICTING" ? 3 : 1.5);
 
 export default function MasterMap() {
-  const { map, systems, select, selection } = useCell();
+  const { map, systems, select, selection, refresh } = useCell();
   const [filter, setFilter] = useState("ALL");
+  const [adding, setAdding] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+
+  const doAddNode = async (e) => {
+    e.preventDefault();
+    if (!newLabel.trim()) return;
+    try {
+      await cellApi.addNode({ label: newLabel.trim(), kind: "external", truth: "UNKNOWN" });
+      toast(`Node added: ${newLabel} (UNKNOWN)`);
+      setNewLabel(""); setAdding(false);
+      await refresh();
+    } catch { toast("Add failed"); }
+  };
+
+  const setTruth = async (nodeId, truth) => {
+    try {
+      await cellApi.setNodeTruth(nodeId, truth);
+      toast(`Node → ${truth}`);
+      await refresh();
+    } catch { toast("Update failed"); }
+  };
 
   const nodes = useMemo(() => {
     if (filter === "ALL") return map.nodes;
@@ -50,9 +74,31 @@ export default function MasterMap() {
                 {f}
               </button>
             ))}
+            <button
+              data-testid="add-node-toggle"
+              onClick={() => setAdding((v) => !v)}
+              className="ml-2 flex items-center gap-1 px-2 py-0.5 text-[10px] font-data uppercase tracking-widest border border-[#00E5FF] text-[#00E5FF] hover:bg-[#00E5FF18]"
+            >
+              <Plus size={10} /> Add node
+            </button>
           </div>
         }
       >
+        {adding && (
+          <form onSubmit={doAddNode} className="border-b border-[#27272A] bg-[#0B0D10] px-4 py-2 flex items-center gap-2">
+            <span className="font-data text-[10px] uppercase tracking-widest text-[#00E5FF]">NEW NODE →</span>
+            <input
+              data-testid="add-node-input"
+              autoFocus
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="LABEL (e.g. RELIC-01)"
+              className="bg-transparent outline-none font-data text-[12px] text-[#F8FAFC] placeholder:text-[#3F3F46] border-b border-[#27272A] px-1"
+            />
+            <span className="font-data text-[10px] uppercase tracking-widest text-[#52525B]">→ UNKNOWN (until proven)</span>
+            <button data-testid="add-node-submit" type="submit" className="ml-auto px-2 py-1 border border-[#00E5FF] text-[#00E5FF] font-data text-[10px] uppercase tracking-widest hover:bg-[#00E5FF18]">Commit</button>
+          </form>
+        )}
         <div className="relative">
           <div className="absolute inset-0 grid-bg pointer-events-none" />
           <svg
@@ -158,6 +204,7 @@ export default function MasterMap() {
                 <th className="text-left px-4 py-2 border-b border-[#27272A]">Owner team</th>
                 <th className="text-left px-4 py-2 border-b border-[#27272A]">Truth</th>
                 <th className="text-left px-4 py-2 border-b border-[#27272A]">Note</th>
+                <th className="text-left px-4 py-2 border-b border-[#27272A]">Set truth</th>
               </tr>
             </thead>
             <tbody>
@@ -173,6 +220,21 @@ export default function MasterMap() {
                   <td className="px-4 py-2 border-b border-[#27272A] text-[#94A3B8]">{s.owner}</td>
                   <td className="px-4 py-2 border-b border-[#27272A]"><DataStatePill state={s.truth} /></td>
                   <td className="px-4 py-2 border-b border-[#27272A] text-[#94A3B8]">{s.note}</td>
+                  <td className="px-4 py-2 border-b border-[#27272A]" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1">
+                      {["KNOWN","STALE","CONFLICTING","SIMULATED","UNKNOWN"].map((t) => (
+                        <button
+                          key={t}
+                          data-testid={`set-truth-${s.id}-${t}`}
+                          onClick={() => setTruth(s.id, t)}
+                          disabled={s.truth === t || s.id === "cell-core"}
+                          className="px-1.5 py-0.5 border border-[#27272A] hover:border-[#00E5FF] hover:text-[#00E5FF] font-data text-[9px] uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed text-[#94A3B8]"
+                        >
+                          {t.slice(0, 3)}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

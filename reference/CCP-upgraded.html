@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <meta
+    name="description"
+    content="JrCockpit — AI Development Cockpit for the L@B"
+  />
+  <title>JrCockpit — L@B</title>
+  <link rel="stylesheet" href="CCP-upgraded.css" />
+</head>
+
+<body>
+  <div id="app" class="app">
+
+    <!-- FIRST RUN -->
+    <section id="bootScreen" class="boot-screen">
+      <div class="boot-card">
+        <div class="boot-logo">
+          <span class="logo-mark">Jr</span>
+          <div>
+            <strong>JrCockpit</strong>
+            <small>AI Development Cockpit</small>
+          </div>
+        </div>
+
+        <div class="boot-line">
+          <span>Initializing cockpit</span>
+          <span class="boot-dots">...</span>
+        </div>
+
+        <div class="boot-services">
+          <div>
+            <span>CELL</span>
+            <b>SIMULATED</b>
+          </div>
+          <div>
+            <span>L@B</span>
+            <b>SIMULATED</b>
+          </div>
+          <div>
+            <span>Ollama</span>
+            <b>SIMULATED</b>
+          </div>
+          <div>
+            <span>Agents</span>
+            <b>SIMULATED</b>
+          </div>
+        </div>
+
+        <div class="boot-progress">
+          <div id="bootProgress"></div>
+        </div>
+
+        <span class="simulation-badge">PROTOTYPE / LOCAL UI</span>
+      </div>
+    </section>
+
+    <!-- APPLICATION -->
+    <main id="cockpit" class="cockpit hidden">
+
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="brand" id="brandButton" title="JrCockpit">
+            <span class="brand-mark">Jr</span>
+            <span class="brand-name">JrCockpit</span>
+          </button>
+
+          <span class="slash">/</span>
+
+          <button class="workspace-selector" id="workspaceButton">
+            <span class="workspace-icon">⌘</span>
+            <span>L@B</span>
+            <span class="chevron">⌄</span>
+          </button>
+        </div>
+
+        <div class="topbar-center">
+          <div class="breadcrumb-current">
+            <span id="topCurrentFile">MASTER_LAB_MAP.md</span>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="top-status">
+            <span class="status-dot green"></span>
+            <span>CELL</span>
+            <span class="status-label">SIMULATED</span>
+          </div>
+
+          <div class="top-status">
+            <span class="status-dot blue"></span>
+            <span>Ollama</span>
+            <span class="status-label">SIMULATED</span>
+          </div>
+
+          <button class="icon-button" id="notificationsButton" title="Notifications">
+            <span>♢</span>
+            <i id="notificationCount">3</i>
+          </button>
+
+          <button class="icon-button" id="settingsButton" title="Settings">⚙</button>
+
+          <div class="operator">
+            <span class="operator-avatar">H</span>
+            <span>Operator</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="main-layout">
+
+        <!-- ACTIVITY BAR -->
+        <aside class="activity-bar">
+          <button class="activity-button jr-home active" data-view="home" title="Jr Home" aria-label="Jr Home">
+            <span>Jr</span>
+          </button>
+
+          <button class="activity-button" data-view="explorer" title="Explorer" aria-label="Explorer">
+            <span>▤</span>
+          </button>
+
+          <button class="activity-button" data-view="search" title="Search">
+            <span>⌕</span>
+          </button>
+
+          <button class="activity-button" data-view="source-control" title="Source Control">
+            <span>⑂</span>
+            <i class="activity-badge">3</i>
+          </button>
+
+          <button class="activity-button" data-view="run" title="Run & Jobs">
+            <span>▷</span>
+          </button>
+
+          <button class="activity-button" data-view="extensions" title="Extensions">
+            <span>⊞</span>
+          </button>
+
+          <div class="activity-divider"></div>
+
+          <button class="activity-button" data-view="agents" title="Agents">
+            <span>♟</span>
+          </button>
+
+          <button class="activity-button cell-activity" data-view="cell" title="CELL">
+            <span>C</span>
+          </button>
+
+          <button class="activity-button" data-view="lab-map" title="L@B Map">
+            <span>⌘</span>
+          </button>
+
+          <button class="activity-button" data-view="memory" title="Memory" aria-label="Memory">
+            <span>◎</span>
+          </button>
+
+          <button class="activity-button approvals-activity" data-view="approvals" title="Approvals" aria-label="Approvals">
+            <span>✓</span>
+            <i class="activity-badge">1</i>
+          </button>
+
+          <button class="activity-button" data-view="terminal" title="Terminal">
+            <span>›_</span>
+          </button>
+
+          <div class="activity-spacer"></div>
+
+          <button class="activity-button" data-view="settings" title="Settings">
+            <span>⚙</span>
+          </button>
+        </aside>
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="sidebar">
+          <div class="sidebar-header">
+            <span id="sidebarTitle">JR HOME</span>
+            <div class="sidebar-actions">
+              <button id="newFileButton" title="New demo file">＋</button>
+              <button title="More">•••</button>
+            </div>
+          </div>
+
+          <div id="sidebarContent" class="sidebar-content"></div>
+        </aside>
+
+        <!-- CENTER -->
+        <section class="workspace">
+
+          <!-- MISSION CONTEXT -->
+          <div id="missionStrip" class="mission-strip">
+            <div class="mission-identity">
+              <span class="mission-pulse"></span>
+              <div>
+                <span class="eyebrow">ACTIVE MISSION</span>
+                <strong>Make JrCockpit the one</strong>
+              </div>
+            </div>
+            <div class="mission-facts">
+              <span><b>MODE</b> SIMULATED</span>
+              <span><b>GOVERNANCE</b> HUMAN APPROVAL</span>
+              <span><b>TRUTH</b> MASTER_LAB_MAP.md</span>
+            </div>
+            <span class="truth-badge">TRUTHFUL SIMULATION</span>
+          </div>
+
+          <!-- EDITOR -->
+          <div class="editor-container">
+
+            <div id="tabs" class="tabs"></div>
+
+            <div class="editor-toolbar">
+              <div class="breadcrumbs">
+                <span>L@B</span>
+                <span>›</span>
+                <span id="breadcrumbFile">MASTER_LAB_MAP.md</span>
+              </div>
+
+              <div class="editor-tools">
+                <button id="findButton" title="Find in file">⌕</button>
+                <button id="foldButton" title="Fold code">⌄</button>
+                <button id="minimapButton" title="Toggle minimap">▥</button>
+              </div>
+            </div>
+
+            <div id="editorFind" class="editor-find hidden">
+              <input id="editorFindInput" placeholder="Find in file..." />
+              <span id="editorFindCount"></span>
+              <button id="editorFindClose">×</button>
+            </div>
+
+            <div class="editor-body">
+
+              <div id="editorLines" class="line-numbers"></div>
+
+              <div
+                id="editor"
+                class="code-editor"
+                contenteditable="true"
+                spellcheck="false"
+                aria-label="Code editor"
+              ></div>
+
+              <div id="minimap" class="minimap"></div>
+            </div>
+
+            <div class="editor-ai-bar">
+              <span class="ai-bar-label">AI</span>
+
+              <button data-ai-action="Explain this">Explain</button>
+              <button data-ai-action="Fix this">Fix</button>
+              <button data-ai-action="Refactor">Refactor</button>
+              <button data-ai-action="Add feature">Add feature</button>
+              <button data-ai-action="Find bug">Find bug</button>
+              <button data-ai-action="Write tests">Tests</button>
+
+              <span class="ai-bar-spacer"></span>
+
+              <button data-ai-action="Ask CELL">Ask CELL</button>
+              <button data-ai-action="Ask Jr">Ask Jr</button>
+            </div>
+          </div>
+
+          <!-- BOTTOM PANEL -->
+          <section id="bottomPanel" class="bottom-panel">
+
+            <div class="bottom-tabs">
+              <button class="bottom-tab active" data-panel="terminal">TERMINAL</button>
+              <button class="bottom-tab" data-panel="output">OUTPUT</button>
+              <button class="bottom-tab" data-panel="problems">
+                PROBLEMS <span class="small-badge">2</span>
+              </button>
+              <button class="bottom-tab" data-panel="jobs">JOBS</button>
+              <button class="bottom-tab" data-panel="logs">LOGS</button>
+
+              <span class="bottom-spacer"></span>
+
+              <button id="clearBottom" class="bottom-action">Clear</button>
+              <button id="collapseBottom" class="bottom-action">⌄</button>
+            </div>
+
+            <div id="bottomContent" class="bottom-content"></div>
+          </section>
+        </section>
+
+        <!-- AI PANEL -->
+        <aside id="aiPanel" class="ai-panel">
+
+          <div class="ai-header">
+            <div>
+              <div class="eyebrow">AI WORKSPACE</div>
+              <strong id="aiPanelTitle">CELL</strong>
+            </div>
+
+            <button id="closeAiPanel" class="icon-button small">×</button>
+          </div>
+
+          <div class="agent-selector">
+            <button id="activeAgentButton">
+              <span class="agent-avatar cell-avatar">C</span>
+              <span id="activeAgentName">CELL</span>
+              <span class="agent-state">● SIMULATED</span>
+              <span class="chevron">⌄</span>
+            </button>
+
+            <div id="agentMenu" class="agent-menu hidden"></div>
+          </div>
+
+          <div class="context-card">
+            <div class="context-title">
+              <span>CURRENT CONTEXT</span>
+              <button id="refreshContext">↻</button>
+            </div>
+
+            <div class="context-row">
+              <span>Workspace</span>
+              <b>L@B</b>
+            </div>
+
+            <div class="context-row">
+              <span>System</span>
+              <b>CELL</b>
+            </div>
+
+            <div class="context-row">
+              <span>Agent</span>
+              <b id="contextAgent">CELL</b>
+            </div>
+
+            <div class="context-files">
+              <span>Files</span>
+              <div id="contextFiles"></div>
+            </div>
+          </div>
+
+          <div id="chatMessages" class="chat-messages"></div>
+
+          <div class="ai-input-area">
+            <div class="quick-prompts">
+              <button data-prompt="/status">/status</button>
+              <button data-prompt="/agents">/agents</button>
+              <button data-prompt="/map">/map</button>
+              <button data-prompt="/jobs">/jobs</button>
+            </div>
+
+            <div class="chat-input-wrap">
+              <textarea
+                id="chatInput"
+                rows="3"
+                placeholder="Ask the active AI..."
+              ></textarea>
+
+              <div class="chat-input-footer">
+                <button id="attachButton" title="Attach context">＋</button>
+
+                <span class="input-hint">Enter to send · Shift+Enter for newline</span>
+
+                <button id="sendChat" class="send-button">↑</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- STATUS BAR -->
+      <footer class="statusbar">
+        <div class="status-left">
+          <span class="status-pill">
+            <span class="status-dot green"></span>
+            L@B
+          </span>
+
+          <span class="status-pill">⑂ main*</span>
+          <span class="status-pill">Python</span>
+          <span class="status-pill">
+            <span class="status-dot blue"></span>
+            Ollama
+          </span>
+          <span class="status-pill">
+            <span class="status-dot green"></span>
+            CELL
+          </span>
+          <span class="status-pill">XJ-9</span>
+        </div>
+
+        <div class="status-right">
+          <span>UTF-8</span>
+          <span id="cursorPosition">Ln 1, Col 1</span>
+          <span>Spaces: 2</span>
+          <span class="simulation-status">SIMULATED ENVIRONMENT</span>
+        </div>
+      </footer>
+    </main>
+
+
+<div id="homeViewTemplate" class="hidden">
+  <div class="home-view">
+    <div class="home-hero">
+      <div>
+        <span class="eyebrow">JRCOCKPIT / COMMAND CENTER</span>
+        <h1>Make JrCockpit the one.</h1>
+        <p>One governed environment for the L@B: context, workers, code, approvals and truth.</p>
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <button class="home-card" data-home-action="agents">
+        <span class="home-card-icon">♟</span>
+        <span><b>Workers</b><small>7 registered · 3 active</small></span>
+      </button>
+      <button class="home-card" data-home-action="approvals">
+        <span class="home-card-icon">✓</span>
+        <span><b>Approvals</b><small>1 change waiting for operator</small></span>
+      </button>
+      <button class="home-card" data-home-action="lab-map">
+        <span class="home-card-icon">⌘</span>
+        <span><b>L@B Map</b><small>CELL · Jr · XJ · Runtime · Memory</small></span>
+      </button>
+      <button class="home-card" data-home-action="memory">
+        <span class="home-card-icon">◎</span>
+        <span><b>Memory</b><small>Context indexed · integration simulated</small></span>
+      </button>
+    </div>
+
+    <div class="home-section">
+      <div class="panel-section-title"><span>UI DNA</span><span>VERIFIER VIEW</span></div>
+      <div class="dna-list">
+        <div><span class="dna-label keep">KEEP</span><span>Activity bar, workspace tabs, terminal, AI panel and service boundaries.</span></div>
+        <div><span class="dna-label improve">IMPROVE</span><span>Mission awareness, information hierarchy, Jr identity and responsive behavior.</span></div>
+        <div><span class="dna-label attack">ATTACK</span><span>Fake state, dead interactions, duplicate navigation and runtime failures.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- COMMAND PALETTE -->
+    <div id="commandPalette" class="overlay hidden">
+      <div class="command-palette">
+        <div class="command-search">
+          <span>⌕</span>
+          <input id="commandInput" placeholder="Type a command..." autofocus />
+          <kbd>ESC</kbd>
+        </div>
+
+        <div id="commandList" class="command-list"></div>
+      </div>
+    </div>
+
+    <!-- GLOBAL SEARCH -->
+    <div id="globalSearchOverlay" class="overlay hidden">
+      <div class="search-modal">
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow">GLOBAL SEARCH</span>
+            <h2>Search L@B</h2>
+          </div>
+          <button class="modal-close" data-close-overlay="globalSearchOverlay">×</button>
+        </div>
+
+        <div class="global-search-input">
+          <span>⌕</span>
+          <input id="globalSearchInput" placeholder="Search files, agents, systems, jobs, memory..." />
+        </div>
+
+        <div id="globalSearchResults" class="search-results">
+          <div class="empty-state">
+            <span class="empty-icon">⌕</span>
+            <p>Search across the demo workspace.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIFF MODAL -->
+    <div id="diffOverlay" class="overlay hidden">
+      <div class="diff-modal">
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow">PROPOSED CHANGE</span>
+            <h2 id="diffTitle">orchestrator.py</h2>
+          </div>
+
+          <button class="modal-close" data-close-overlay="diffOverlay">×</button>
+        </div>
+
+        <div class="approval-banner">
+          <div>
+            <strong>APPROVAL REQUIRED</strong>
+            <span>AI proposes a governed change. Nothing will be modified automatically.</span>
+          </div>
+          <span class="risk medium">MEDIUM RISK</span>
+        </div>
+
+        <div class="diff-body">
+          <div class="diff-meta">
+            <span>Agent: <b>XJ-9</b></span>
+            <span>File: <b>orchestrator.py</b></span>
+            <span>Change: <b>Job routing</b></span>
+          </div>
+
+          <div class="diff-code">
+            <div class="diff-line unchanged">
+              <span class="diff-number">41</span>
+              <span class="diff-sign"></span>
+              <code>def route_job(job, context):</code>
+            </div>
+
+            <div class="diff-line removed">
+              <span class="diff-number">42</span>
+              <span class="diff-sign">−</span>
+              <code>return default_worker(job)</code>
+            </div>
+
+            <div class="diff-line added">
+              <span class="diff-number">42</span>
+              <span class="diff-sign">+</span>
+              <code>worker = cell.select_worker(job, context)</code>
+            </div>
+
+            <div class="diff-line added">
+              <span class="diff-number">43</span>
+              <span class="diff-sign">+</span>
+              <code>return worker.dispatch(job)</code>
+            </div>
+
+            <div class="diff-line unchanged">
+              <span class="diff-number">44</span>
+              <span class="diff-sign"></span>
+              <code></code>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="secondary-button" id="editDiff">Edit</button>
+          <button class="secondary-button danger" id="rejectDiff">Reject</button>
+          <button class="secondary-button" id="previewDiff">Preview</button>
+          <button class="primary-button" id="approveDiff">Approve & Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NODE INSPECTOR -->
+    <div id="inspectorOverlay" class="overlay hidden">
+      <div class="inspector-modal">
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow">SYSTEM INSPECTOR</span>
+            <h2 id="inspectorTitle">CELL</h2>
+          </div>
+
+          <button class="modal-close" data-close-overlay="inspectorOverlay">×</button>
+        </div>
+
+        <div id="inspectorContent"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settingsOverlay" class="overlay hidden">
+      <div class="settings-modal">
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow">CONFIGURATION</span>
+            <h2>Settings</h2>
+          </div>
+
+          <button class="modal-close" data-close-overlay="settingsOverlay">×</button>
+        </div>
+
+        <div class="settings-layout">
+          <nav class="settings-nav">
+            <button class="settings-nav-item active" data-settings="general">General</button>
+            <button class="settings-nav-item" data-settings="appearance">Appearance</button>
+            <button class="settings-nav-item" data-settings="providers">AI Providers</button>
+            <button class="settings-nav-item" data-settings="agents">Agents</button>
+            <button class="settings-nav-item" data-settings="cell">CELL</button>
+            <button class="settings-nav-item" data-settings="lab">L@B</button>
+            <button class="settings-nav-item" data-settings="ollama">Ollama</button>
+            <button class="settings-nav-item" data-settings="git">Git</button>
+            <button class="settings-nav-item" data-settings="terminal">Terminal</button>
+            <button class="settings-nav-item" data-settings="shortcuts">Keyboard Shortcuts</button>
+            <button class="settings-nav-item" data-settings="security">Security</button>
+            <button class="settings-nav-item" data-settings="governance">Governance</button>
+          </nav>
+
+          <div id="settingsContent" class="settings-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="CCP-upgraded.js"></script>
+</body>
+</html>

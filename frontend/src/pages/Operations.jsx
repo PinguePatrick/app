@@ -3,6 +3,9 @@ import { useCell } from "@/state/CellContext";
 import Panel from "@/components/Panel";
 import DataStatePill from "@/components/DataStatePill";
 import GovernanceBadge from "@/components/GovernanceBadge";
+import { cellApi } from "@/services/cellApi";
+import { toast } from "sonner";
+import { ChevronRight } from "lucide-react";
 
 const LOOP = ["OBSERVE","LOCATE","UNDERSTAND","PLAN","GOVERNANCE","APPROVE","EXECUTE","VERIFY","RECORD","UPDATE MAP"];
 
@@ -23,9 +26,17 @@ function LoopBar({ phase }) {
 }
 
 export default function Operations() {
-  const { missions, tasks, selection, select } = useCell();
+  const { missions, tasks, selection, select, refresh } = useCell();
   const activeMission = missions.find((m) => selection?.kind === "mission" && m.id === selection.id) || missions[0];
-  const missionTasks = tasks.filter((t) => t.missionId === activeMission?.id);
+  const missionTasks = tasks.filter((t) => t.missionId === activeMission?.id || t.mission_id === activeMission?.id);
+
+  const advance = async (id) => {
+    try {
+      await cellApi.advanceMission(id);
+      toast("Phase advanced");
+      await refresh();
+    } catch { toast("Advance failed"); }
+  };
 
   return (
     <div className="space-y-4" data-testid="operations">
@@ -58,7 +69,21 @@ export default function Operations() {
       </Panel>
 
       {activeMission && (
-        <Panel title={`Tasks · ${activeMission.codename}`} right={<span>{missionTasks.length} tasks</span>}>
+        <Panel
+          title={`Tasks · ${activeMission.codename}`}
+          right={
+            <div className="flex items-center gap-2">
+              <span>{missionTasks.length} tasks</span>
+              <button
+                data-testid={`advance-mission-${activeMission.id}`}
+                onClick={() => advance(activeMission.id)}
+                className="flex items-center gap-1 px-2 py-0.5 border border-[#00E5FF] text-[#00E5FF] hover:bg-[#00E5FF18] font-data text-[10px] uppercase tracking-widest"
+              >
+                Advance phase <ChevronRight size={11} />
+              </button>
+            </div>
+          }
+        >
           {missionTasks.length === 0 ? (
             <div className="p-6 font-data text-[11px] uppercase tracking-widest text-[#52525B]">No tasks yet</div>
           ) : (
