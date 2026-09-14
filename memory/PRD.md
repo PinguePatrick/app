@@ -59,5 +59,13 @@ Build CELL, the central operational brain and command interface of a local-first
 - Zero regressions: all mutations, palette, right-inspector, CELL console, DEMO banner preserved
 - **Documents produced** (§105 Required First Report): `/app/memory/ARCHITECTURE_INVENTORY.md`, `HISTORICAL_CAPABILITY_MAP.md`, `CONSOLIDATION_PLAN.md`
 
+## Implemented (2026-02-12, iteration 4 — Phases 4+5+6+7)
+- **Phase 4 Work**: Operations page rebuilt as 4-tab Work surface (Jobs / Governed Builds / Mission Loop / Verification) with the §6 governed lifecycle bar (DISCOVERED → PROPOSED → REVIEW → APPROVED → BUILDING → TESTING → VERIFIED + failure states REJECTED / FAILED / VERIFICATION_FAILED). Advance/Fail buttons per active job.
+- **Phase 5 Governance v2**: `Diff` is now a first-class object — every approval carries a `diff_id`, a `view-diff-{id}` button opens `DiffViewer` overlay with red/green hunks. `Verification` lifecycle wired (auto-created PASSED on job VERIFIED). Routing settings panel added (reference-only). Approving an approval now spawns a follow-on Job (§56).
+- **Phase 6 L@B Map v2**: Right Inspector extended with facets for Service (truth pill), Repository, Depends-on / Consumers (clickable), Last-check, Related jobs — turns the map into an operational instrument (§28-30, §56-60).
+- **Phase 7 System**: Runtime page rebuilt as 5-tab System surface (Services / Runtime / Machine / Routes / Diagnostics). Full §24 truth model live (LIVE / VERIFIED / CACHED / SIMULATED / STALE / UNKNOWN / DOWN / ERROR) — no fake green. Machine tab shows dashes explicitly (§32). Routes carry gov_class SAFE / CONTROLLED / FATHER APPROVAL / DO NOT TEST (§42).
+- Backend: 8 new collections + 10 new endpoints + extended approval-decide to spawn Jobs. `/reseed` decorator bug fixed.
+- Zero regressions. Shell, palette, right inspector, CELL console, DEMO banner, MissionStrip and every previous data-testid preserved.
+
 ## Testing status
-- iteration_3: backend 23/23 pytest pass; frontend 100% of tested flows pass; zero regressions.
+- iteration_4: backend 39/39 pytest (serial) pass; frontend 100% of tested flows pass; zero critical bugs.

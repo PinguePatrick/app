@@ -1,0 +1,30 @@
+{
+  "summary": "Phases 4+5+6+7 tested end-to-end. Backend: 39/39 pytest cases pass (serial run) covering all new endpoints (/cell/jobs, /proposals, /verifications, /services, /routes, /routing, /diagnostics, /diffs/{id}), extended approvals (diff_id/verification_id/gov_class), extended systems (service_id/repo/depends_on/last_check), job lifecycle mutations (advance REVIEW→APPROVED→BUILDING→TESTING→VERIFIED auto-spawns Verification PASSED; fail marks FAILED with reason & records JOB event), approval-APPROVE spawning a follow-on job titled 'Apply: RELAY-EDGE rebind…', 409 on already-blocked approve, /reseed, and full regression on all 16 existing reads + 3 legacy mutations. No mongo _id leaked. Frontend verified: Operations 4 tabs (work-tab-jobs|builds|loop|verify) all switch and load without console error; Jobs tab renders 3 active jobs with BuildLifecycleBar + advance/fail buttons for job-001/002/003, plus Failed section (job-004 with error text) and Completed section (job-005 VERIFIED); Builds tab shows 4 proposals with REJECTED for prop-3; Loop tab shows advance-mission buttons; Verify tab shows both PASSED (job-005) and FAILED (job-004) records. Runtime 5 tabs (system-tab-services|runtime|machine|routes|diagnostics) all load; Services tab shows all 8 required truth-pill states (LIVE, VERIFIED, CACHED, SIMULATED, STALE, UNKNOWN, DOWN, ERROR) via svc-truth-{state} testids; Machine tab shows dashes with SIMULATED label (no fake numbers); Routes tab surfaces all 4 gov_class badges (SAFE / CONTROLLED / FATHER APPROVAL / DO NOT TEST); Diagnostics shows Ollama + Browser CDP as DOWN. Governance shows view-diff-ap-1 button opening a diff-viewer overlay with red/green hunk coloring, routing-panel with routing-mode='DIRECT', and Verification Record card (ver-1 PASSED, ver-2 FAILED). Approving ap-1 drops father-alert-ap-1 from 1 to 0 on Home and spawns a new 'Apply: RELAY-EDGE rebind' job in the Operations Jobs tab. Master Map: clicking map-node-sys-cortex opens the extended Right Inspector with facet-service, facet-repo, facet-deps, facet-lastcheck. MissionStrip visible on every route (/, /operations, /runtime, /governance, /map, /knowledge, /memory, and also on unmapped /agents, /settings). Cmd+K palette opens (visible in screenshot, though it uses a different testid than 'command-palette'/'command-center'). DEMO banner present.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Test suite uses pytest-xdist by default (see backend/pytest.ini addopts) — parallel workers race on the shared MongoDB backing store because /reseed wipes shared collections. Two tests (test_advance_job_review_to_verified, test_add_node_and_set_truth) intermittently fail under xdist because a peer worker reseeds between the mutation and the readback. All 39 pass in serial mode. Recommend either (a) adding a per-test-session lock around reseed, (b) removing xdist for these mutation tests, or (c) making mutations return the full record and asserting on that return value instead of a subsequent GET.",
+    "server.set_node_truth passes `truth` as a query param instead of a Pydantic body — inconsistent with other POSTs. Minor.",
+    "record_event uses only H:M:S (no date) — events list ordering relies on insertion order. Acceptable for demo.",
+    "Frontend nav includes routes like /agents, /settings that log 'No routes matched location' warnings — either add stubs or remove them from nav to keep the console clean.",
+    "The 'command-center' / command palette wired via Cmd+K works (visually confirmed) but the top-level testid does not match either 'command-palette' or 'command-center' — add a canonical data-testid on the palette root for future automation."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "success_rate": {"backend": "100% (39/39 serial; xdist race on 2 mutation tests — infra issue, not app)", "frontend": "100% of tested flows"},
+  "seed_data_creation": "Called POST /api/cell/reseed at test start and end to restore ap-1 PENDING, remove spawned 'Apply: RELAY-EDGE rebind' job, and reset job-002/003 states. State is now clean.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All Phase 4/5/6/7 data-testids verified working: work-tab-{jobs|builds|loop|verify}, job-lifecycle-{id}, job-advance-{id}, job-fail-{id} (on active jobs only — terminal FAILED/VERIFIED jobs render in separate 'Failed'/'Completed' sections without lifecycle bars/buttons, which matches the spec), system-tab-{services|runtime|machine|routes|diagnostics}, svc-truth-{LIVE|VERIFIED|CACHED|SIMULATED|STALE|UNKNOWN|DOWN|ERROR}, view-diff-{approval_id}, diff-viewer, diff-close, routing-panel, routing-mode, facet-{service|repo|deps|lastcheck|jobs}, map-node-{id}, mission-strip, father-alert-{approval_id}. Backend is stateful MongoDB — after any mutation-heavy testing, call POST /api/cell/reseed to restore ap-1 PENDING, job-002 REVIEW, job-003 BUILDING, and remove any spawned 'Apply: …' jobs. For pytest, run with `-o addopts=` to disable xdist and avoid the reseed race."
+}

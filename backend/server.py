@@ -143,6 +143,36 @@ async def memory(): return await find_all("memory")
 @api.get("/cell/runtime")
 async def runtime(): return await find_all("runtime")
 
+@api.get("/cell/jobs")
+async def jobs(): return await find_all("jobs")
+
+@api.get("/cell/proposals")
+async def proposals(): return await find_all("proposals")
+
+@api.get("/cell/diffs/{diff_id}")
+async def get_diff(diff_id: str):
+    doc = await db.diffs.find_one({"id": diff_id}, PROJECT)
+    if not doc:
+        raise HTTPException(404, "Diff not found")
+    return doc
+
+@api.get("/cell/verifications")
+async def verifications(): return await find_all("verifications")
+
+@api.get("/cell/services")
+async def services(): return await find_all("services")
+
+@api.get("/cell/routes")
+async def routes(): return await find_all("routes")
+
+@api.get("/cell/routing")
+async def routing():
+    doc = await db.routing.find_one({"id": "routing"}, PROJECT)
+    return doc
+
+@api.get("/cell/diagnostics")
+async def diagnostics(): return await find_all("diagnostics")
+
 @api.get("/cell/policies")
 async def policies(): return await find_all("policies")
 
@@ -159,6 +189,25 @@ async def decide_approval(approval_id: str, body: ApprovalDecision):
     new_state = "APPROVED" if body.decision.upper() == "APPROVE" else "BLOCKED"
     await db.approvals.update_one({"id": approval_id}, {"$set": {"state": new_state}})
     await record_event("APPROVAL", f"JR {new_state.lower()}: {doc['title']}")
+
+    # §5-Governance: approval decisions spawn a Job (only on APPROVE, when a diff exists)
+    if new_state == "APPROVED" and doc.get("diff_id"):
+        job_id = f"job-{uuid.uuid4().hex[:6]}"
+        await db.jobs.insert_one({
+            "id": job_id,
+            "title": f"Apply: {doc['title']}",
+            "mission_id": doc.get("mission_id"),
+            "worker": doc.get("requester", "CELL"),
+            "state": "APPROVED",
+            "progress": 10,
+            "approval_id": approval_id,
+            "verification_id": None,
+            "files": [],
+            "started_at": hhmmss(),
+            "risk": doc.get("risk", "LOW"),
+        })
+        await record_event("JOB", f"Spawned {job_id} from approval {approval_id}")
+
     updated = await db.approvals.find_one({"id": approval_id}, PROJECT)
     return updated
 
@@ -213,6 +262,44 @@ async def advance_mission(mission_id: str):
     await db.missions.update_one({"id": mission_id}, {"$set": {"phase": next_phase}})
     await record_event("TASK", f"{m['codename']}: phase → {next_phase}")
     return await db.missions.find_one({"id": mission_id}, PROJECT)
+
+JOB_LIFECYCLE = ["DISCOVERED", "PROPOSED", "REVIEW", "APPROVED", "BUILDING", "TESTING", "VERIFIED"]
+JOB_FAILURE   = {"REJECTED", "FAILED", "VERIFICATION_FAILED"}
+
+@api.post("/cell/jobs/{job_id}/advance")
+async def advance_job(job_id: str):
+    j = await db.jobs.find_one({"id": job_id}, PROJECT)
+    if not j:
+        raise HTTPException(404, "Job not found")
+    if j["state"] in JOB_FAILURE or j["state"] == "VERIFIED":
+        raise HTTPException(409, f"Job is terminal ({j['state']}); cannot advance")
+    try:
+        idx = JOB_LIFECYCLE.index(j["state"])
+    except ValueError:
+        idx = 0
+    next_state = JOB_LIFECYCLE[min(idx + 1, len(JOB_LIFECYCLE) - 1)]
+    upd = {"state": next_state}
+    if next_state == "VERIFIED":
+        vid = f"ver-{uuid.uuid4().hex[:6]}"
+        await db.verifications.insert_one({
+            "id": vid, "target_kind": "job", "target_id": job_id,
+            "state": "PASSED", "ts": hhmmss(),
+            "evidence": f"Auto-verification recorded on {j['title']}",
+        })
+        upd["verification_id"] = vid
+        upd["progress"] = 100
+    await db.jobs.update_one({"id": job_id}, {"$set": upd})
+    await record_event("JOB", f"{j['title']} → {next_state}")
+    return await db.jobs.find_one({"id": job_id}, PROJECT)
+
+@api.post("/cell/jobs/{job_id}/fail")
+async def fail_job(job_id: str, reason: str = "no reason given"):
+    j = await db.jobs.find_one({"id": job_id}, PROJECT)
+    if not j:
+        raise HTTPException(404, "Job not found")
+    await db.jobs.update_one({"id": job_id}, {"$set": {"state": "FAILED", "error": reason}})
+    await record_event("JOB", f"{j['title']} → FAILED ({reason})")
+    return await db.jobs.find_one({"id": job_id}, PROJECT)
 
 @api.post("/cell/reseed")
 async def reseed():

@@ -10,6 +10,8 @@ export function CellProvider({ children }) {
     systems: [], agents: [], teams: [], missions: [], tasks: [],
     sources: [], approvals: [], risks: [], events: [], history: [],
     map: { nodes: [], edges: [] }, memory: [], runtime: [], policies: [],
+    jobs: [], proposals: [], verifications: [], services: [], routes: [],
+    routing: null, diagnostics: [],
   });
   const [selection, setSelection] = useState(null); // { kind, id }
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -21,17 +23,21 @@ export function CellProvider({ children }) {
   }, []);
 
   async function refresh() {
-    const [cell, mission, autonomy, jr, operator, systems, agents, teams, missions, tasks, sources, approvals, risks, events, history, map, memory, runtime, policies] =
+    const [cell, mission, autonomy, jr, operator, systems, agents, teams, missions, tasks, sources, approvals, risks, events, history, map, memory, runtime, policies,
+           jobs, proposals, verifications, services, routes, routing, diagnostics] =
       await Promise.all([
         cellApi.getCellState(), cellApi.getMission(), cellApi.getAutonomy(), cellApi.getJrState(),
         cellApi.getOperator(), cellApi.getSystems(), cellApi.getAgents(),
         cellApi.getTeams(), cellApi.getMissions(), cellApi.getTasks(), cellApi.getSources(),
         cellApi.getApprovals(), cellApi.getRisks(), cellApi.getEvents(), cellApi.getHistory(),
         cellApi.getMap(), cellApi.getMemory(), cellApi.getRuntime(), cellApi.getPolicies(),
+        cellApi.getJobs(), cellApi.getProposals(), cellApi.getVerifications(), cellApi.getServices(),
+        cellApi.getRoutes(), cellApi.getRouting(), cellApi.getDiagnostics(),
       ]);
     setState({
       loading: false, cell, mission, autonomy, jr, operator, systems, agents, teams, missions, tasks,
       sources, approvals, risks, events, history, map, memory, runtime, policies,
+      jobs, proposals, verifications, services, routes, routing, diagnostics,
     });
   }
 

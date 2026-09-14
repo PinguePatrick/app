@@ -1,12 +1,16 @@
+// Extended Context Inspector (Phase 6): richer facets for system nodes —
+// service · repo · dependencies · consumers · last check · related jobs.
 import React, { useMemo } from "react";
 import { useCell } from "@/state/CellContext";
 import DataStatePill from "@/components/DataStatePill";
 import GovernanceBadge from "@/components/GovernanceBadge";
-import { X, MapPin } from "lucide-react";
+import ServiceTruthPill from "@/components/ServiceTruthPill";
+import { X, MapPin, GitBranch, Radio, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-// Right-side inspector. Reveals selection context. Otherwise shows "no selection".
 export default function RightInspector() {
-  const { selection, clearSelection, systems, agents, missions, approvals, sources } = useCell();
+  const { selection, clearSelection, systems, agents, missions, approvals, sources, services, jobs, select } = useCell();
+  const navigate = useNavigate();
 
   const details = useMemo(() => {
     if (!selection) return null;
@@ -19,11 +23,21 @@ export default function RightInspector() {
     return null;
   }, [selection, systems, agents, missions, approvals, sources]);
 
+  // Phase 6 facets for a system node
+  const facets = useMemo(() => {
+    if (details?.kind !== "system") return null;
+    const s = details.entity;
+    if (!s) return null;
+    const service    = s.service_id ? services.find((x) => x.id === s.service_id) : null;
+    const dependsOn  = (s.depends_on || []).map((id) => systems.find((x) => x.id === id)).filter(Boolean);
+    const consumers  = systems.filter((x) => (x.depends_on || []).includes(s.id));
+    const relatedJobs = jobs.filter((j) => (j.files || []).some((f) => (s.repo && f.startsWith(s.repo.split("/")[1] || "")))
+                                          || (s.name && j.title.includes(s.name)));
+    return { service, dependsOn, consumers, relatedJobs };
+  }, [details, services, systems, jobs]);
+
   return (
-    <aside
-      data-testid="right-inspector"
-      className="w-80 shrink-0 border-l border-[#27272A] bg-[#0B0D10] flex flex-col"
-    >
+    <aside data-testid="right-inspector" className="w-80 shrink-0 border-l border-[#27272A] bg-[#0B0D10] flex flex-col">
       <header className="h-9 border-b border-[#27272A] px-4 flex items-center justify-between bg-[#0F1115]">
         <div className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 bg-[#00E5FF]" />
@@ -62,9 +76,91 @@ export default function RightInspector() {
             </div>
           </div>
 
+          {/* Phase 6 richer facets — only for systems */}
+          {facets && (
+            <>
+              {facets.service && (
+                <div className="border-t border-[#27272A] pt-3" data-testid="facet-service">
+                  <div className="font-data text-[10px] uppercase tracking-widest text-[#52525B] mb-2">Service</div>
+                  <div className="flex items-center justify-between font-data text-[11px]">
+                    <span className="text-[#F8FAFC]">{facets.service.name}</span>
+                    <ServiceTruthPill state={facets.service.status} />
+                  </div>
+                  <div className="mt-1 font-data text-[10px] text-[#52525B] uppercase tracking-widest">
+                    {facets.service.host}:{facets.service.port} · last check {facets.service.last_check}
+                  </div>
+                </div>
+              )}
+
+              {details.entity.repo && (
+                <div className="border-t border-[#27272A] pt-3" data-testid="facet-repo">
+                  <div className="font-data text-[10px] uppercase tracking-widest text-[#52525B] mb-2 flex items-center gap-1">
+                    <GitBranch size={11} /> Repository
+                  </div>
+                  <div className="font-data text-[12px] text-[#F8FAFC]">{details.entity.repo}</div>
+                </div>
+              )}
+
+              <div className="border-t border-[#27272A] pt-3 grid grid-cols-2 gap-3" data-testid="facet-deps">
+                <div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-[#52525B] mb-2">Depends on</div>
+                  {facets.dependsOn.length === 0 ? (
+                    <div className="font-data text-[11px] text-[#52525B]">—</div>
+                  ) : (
+                    <ul className="space-y-1">
+                      {facets.dependsOn.map((d) => (
+                        <li key={d.id} onClick={() => select("system", d.id)}
+                            className="cursor-pointer font-data text-[11px] text-[#F8FAFC] hover:text-[#00E5FF] flex items-center gap-1">
+                          <ArrowRight size={10} /> {d.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-[#52525B] mb-2">Consumers</div>
+                  {facets.consumers.length === 0 ? (
+                    <div className="font-data text-[11px] text-[#52525B]">—</div>
+                  ) : (
+                    <ul className="space-y-1">
+                      {facets.consumers.map((c) => (
+                        <li key={c.id} onClick={() => select("system", c.id)}
+                            className="cursor-pointer font-data text-[11px] text-[#F8FAFC] hover:text-[#00E5FF] flex items-center gap-1">
+                          <ArrowRight size={10} /> {c.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-[#27272A] pt-3" data-testid="facet-lastcheck">
+                <div className="font-data text-[10px] uppercase tracking-widest text-[#52525B] mb-2 flex items-center gap-1">
+                  <Radio size={11} className="text-[#00E5FF]" /> Last check
+                </div>
+                <div className="font-data text-[12px] text-[#F8FAFC]">{details.entity.last_check || "—"}</div>
+              </div>
+
+              {facets.relatedJobs.length > 0 && (
+                <div className="border-t border-[#27272A] pt-3" data-testid="facet-jobs">
+                  <div className="font-data text-[10px] uppercase tracking-widest text-[#52525B] mb-2">Related jobs</div>
+                  <ul className="space-y-1">
+                    {facets.relatedJobs.map((j) => (
+                      <li key={j.id} onClick={() => navigate("/operations")}
+                          className="cursor-pointer font-body text-[12px] text-[#F8FAFC] hover:text-[#00E5FF]">
+                        · {j.title} <span className="text-[#52525B] font-data text-[10px] uppercase tracking-widest">[{j.state}]</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+
           <div className="border-t border-[#27272A] pt-3 space-y-2 font-data text-[11px]">
             {Object.entries(details.entity).map(([k, v]) => {
-              if (["id", "name", "codename", "label", "title", "truth", "state", "trust"].includes(k)) return null;
+              if (["id", "name", "codename", "label", "title", "truth", "state", "trust",
+                   "service_id", "repo", "depends_on", "last_check"].includes(k)) return null;
               if (typeof v === "object" || v === undefined || v === null || v === "") return null;
               return (
                 <div key={k} className="flex justify-between gap-3">
