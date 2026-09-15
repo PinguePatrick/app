@@ -12,6 +12,7 @@ import Memory from "@/pages/Memory";
 import Runtime from "@/pages/Runtime";
 import Governance from "@/pages/Governance";
 import History from "@/pages/History";
+import Loop from "@/pages/Loop";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
           <Shell>
             <Routes>
               <Route path="/" element={<CommandCenter />} />
+              <Route path="/loop" element={<Loop />} />
               <Route path="/map" element={<MasterMap />} />
               <Route path="/teams" element={<EliteTeams />} />
               <Route path="/operations" element={<Operations />} />

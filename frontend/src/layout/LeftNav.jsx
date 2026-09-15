@@ -2,12 +2,13 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutGrid, Network, Users, Workflow, BookOpen, Database,
-  Server, Scale, History, MessageSquareText,
+  Server, Scale, History, MessageSquareText, Repeat2,
 } from "lucide-react";
 import { useCell } from "@/state/CellContext";
 
 const NAV = [
   { to: "/",           label: "COMMAND CENTER", icon: LayoutGrid,      testId: "nav-command" },
+  { to: "/loop",       label: "GOVERNED LOOP",  icon: Repeat2,          testId: "nav-loop" },
   { to: "/map",        label: "MASTER L@B MAP", icon: Network,          testId: "nav-map" },
   { to: "/teams",      label: "ELITE TEAMS",    icon: Users,            testId: "nav-teams" },
   { to: "/operations", label: "OPERATIONS",     icon: Workflow,         testId: "nav-ops" },
